@@ -1,7 +1,7 @@
 # coding: utf8
 import cv2 
 import numpy as np
-from time import clock, sleep
+from time import perf_counter, sleep
 
 from sendmail import *
 
@@ -18,7 +18,7 @@ def main():
 
     IsCameraSignal(cam)
 
-    sender = Mail_Sender()
+   # sender = Mail_Sender()
 
     kernel = np.ones((7,7), np.uint8)
 
@@ -28,12 +28,13 @@ def main():
     start_t = None
 
     while 1:
-        if start_t is not None and clock() - start_t  >= 180:
+        if start_t is not None and perf_counter() - start_t  >= 30:
             send_flag = True
-            #print(clock() - start_t)
-            start_t = clock()
+            #print(perf_counter() - start_t)
+            start_t = perf_counter()
 
         frame = cam.read()[1]
+        cv2.imshow('frame', frame) 
 
         blur = cv2.GaussianBlur(frame, (21, 21), 0)
 
@@ -50,24 +51,24 @@ def main():
             continue
         
         for item in cnts:
-            if cv2.contourArea(item) < 1300:
+            if cv2.contourArea(item) < 800:
                 continue
 
             (x,y,w,h) = cv2.boundingRect(item)
             cv2.rectangle(frame, (x,y), (x+w, y+h), (255, 255, 0), 2)
             if send_flag:
-                sender.sendLetter()
+                #cv2.imwrite('frame.jpg', frame)
+                #sender.AddImageSend()
+                #sender.sendLetter()
                 send_flag = False
                 start_t = clock()
         
-        cv2.imshow('frame', frame)
-
-        
+        cv2.imshow('frame', frame)      
         c= cv2.waitKey(1)
         if c==27 or c == 1048603: #Break if user enters 'Esc'.
             break
 
-    sender.sendClose()
+    #sender.sendClose()
     cam.release()
     cv2.destroyAllWindows()
 
